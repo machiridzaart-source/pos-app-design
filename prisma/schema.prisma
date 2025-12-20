@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL") // Uses connection pooling
+  directUrl = env("DIRECT_URL") // Used for migrations
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  price       Float
+  stock       Int
+  category    String
+  saleItems   SaleItem[]
+}
+
+model Sale {
+  id            String     @id @default(uuid())
+  timestamp     DateTime   @default(now())
+  totalAmount   Float
+  paymentMethod String
+  items         SaleItem[]
+  receipt       Receipt?
+}
+
+model SaleItem {
+  id          String  @id @default(uuid())
+  saleId      String
+  sale        Sale    @relation(fields: [saleId], references: [id])
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  quantity    Int
+  priceAtSale Float
+}
+
+model Receipt {
+  id      String @id @default(uuid())
+  saleId  String @unique
+  sale    Sale   @relation(fields: [saleId], references: [id])
+  content String 
+}
+
+model Settings {
+  id       String @id @default("default")     
+  vatRate  Float  @default(0.15)
+  currency String @default("R") // "R" or "$"
+}
